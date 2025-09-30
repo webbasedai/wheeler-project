@@ -1,17 +1,19 @@
-
 services:
   n8n:
-    image: n8nio/n8n
+    image: n8nio/n8n:latest
     ports:
-      - "5678:5678"
+      - "443:5678"  # Expose n8n via HTTPS
     environment:
-      - N8N_HOST=35.238.42.249
+      - N8N_HOST=automation.jypi.org
       - N8N_PORT=5678
-      - N8N_PROTOCOL=http
-      - N8N_SECURE_COOKIE=false
+      - N8N_PROTOCOL=https
+      - N8N_SSL_KEY=/etc/letsencrypt/live/automation.jypi.org/privkey.pem
+      - N8N_SSL_CERT=/etc/letsencrypt/live/automation.jypi.org/fullchain.pem
+      - N8N_SECURE_COOKIE=true         # Keep secure cookie now that HTTPS is enabled
     volumes:
-      - n8n_data:/home/node/.n8n    # Docker-managed volume for persistence
-    restart: unless-stopped          # Auto-restart if container stops/crashes
+      - n8n_data:/home/node/.n8n        # Docker-managed volume for persistence
+      - /etc/letsencrypt/live/automation.jypi.org:/etc/letsencrypt/live/automation.jypi.org:ro  # Read-only SSL certs
+    restart: unless-stopped
     depends_on:
       - scraper
 
