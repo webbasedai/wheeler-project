@@ -7,14 +7,15 @@ services:
       - N8N_HOST=automation.jypi.org
       - N8N_PORT=5678
       - N8N_PROTOCOL=https
-      - N8N_SSL_KEY=/etc/letsencrypt/live/automation.jypi.org/privkey.pem
-      - N8N_SSL_CERT=/etc/letsencrypt/live/automation.jypi.org/fullchain.pem
+      - N8N_SSL_KEY=/etc/n8n-certs/privkey.pem
+      - N8N_SSL_CERT=/etc/n8n-certs/fullchain.pem
+
       - N8N_SECURE_COOKIE=true
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
     volumes:
-      - n8n_data:/home/node/.n8n                 # Docker-managed persistent data
-      - /etc/letsencrypt/live/automation.jypi.org:/etc/letsencrypt/live/automation.jypi.org:ro
-      - /etc/letsencrypt/archive/automation.jypi.org:/etc/letsencrypt/archive/automation.jypi.org:ro
+      - n8n_data:/home/node/.n8n
+      - /etc/letsencrypt/n8n-certs:/etc/n8n-certs:ro
+
     restart: unless-stopped
     depends_on:
       - scraper
