@@ -15,6 +15,7 @@ services:
     volumes:
       - n8n_data:/home/node/.n8n
       - /etc/letsencrypt/live/automation.jypi.org:/etc/n8n-certs:ro
+      - /etc/letsencrypt/archive/automation.jypi.org:/etc/letsencrypt/archive/automation.jypi.org:ro
 
     restart: unless-stopped
     depends_on:
