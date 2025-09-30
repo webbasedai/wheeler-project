@@ -5,7 +5,7 @@ services:
       - "443:5678"  # Map HTTPS to n8n internal port
     environment:
       - N8N_HOST=automation.jypi.org
-      - N8N_PORT=5678
+      - N8N_PORT=443
       - N8N_PROTOCOL=https
       - N8N_SSL_KEY=/etc/n8n-certs/privkey.pem
       - N8N_SSL_CERT=/etc/n8n-certs/fullchain.pem
