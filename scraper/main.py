@@ -1,8 +1,13 @@
 import asyncio
+import logging
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List
 from playwright.async_api import async_playwright
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Edelweiss Scraper")
 
@@ -15,23 +20,56 @@ class ISBNsRequest(BaseModel):
 async def scrape_isbns(isbns: List[str]):
     results_by_isbn = {}
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        browser = await p.chromium.launch(
+            headless=True,
+            args=[
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-accelerated-2d-canvas',
+                '--no-first-run',
+                '--no-zygote',
+                '--disable-gpu'
+            ]
+        )
         for isbn in isbns:
             context = await browser.new_context()
             page = await context.new_page()
 
+            # Retry logic for handling temporary network issues
+            max_retries = 3
+            retry_count = 0
+            success = False
+            
+            while retry_count < max_retries and not success:
+                try:
+                    # Use domcontentloaded instead of networkidle to avoid timeout issues
+                    await page.goto("https://www.edelweiss.plus/#dashboard", wait_until="domcontentloaded", timeout=60000)
+                    await page.wait_for_timeout(2000)  # Give page time to fully load
+                    success = True
+                except Exception as e:
+                    retry_count += 1
+                    if retry_count < max_retries:
+                        await page.wait_for_timeout(2000 * retry_count)  # Exponential backoff
+                        logger.warning(f"Retry {retry_count} for ISBN {isbn}: {str(e)}")
+                    else:
+                        logger.error(f"Failed to load page after {max_retries} retries for ISBN {isbn}: {str(e)}")
+                        raise e
+            
             try:
-                await page.goto("https://www.edelweiss.plus/#dashboard", wait_until="networkidle")
+                logger.info(f"Processing ISBN: {isbn}")
+                
                 await page.fill('input[name="keywords"]', '')
                 await page.wait_for_timeout(1000)
                 await page.fill('input[name="keywords"]', str(isbn))
                 await page.wait_for_timeout(500)
                 await page.keyboard.press("Enter")
-                await page.wait_for_load_state("networkidle")
+                await page.wait_for_load_state("domcontentloaded", timeout=30000)
 
                 try:
-                    await page.wait_for_selector('div.productRowBody___XM7bE', timeout=15000)
-                except:
+                    await page.wait_for_selector('div.productRowBody___XM7bE', timeout=20000)
+                except Exception as selector_error:
+                    logger.warning(f"No results found for ISBN {isbn}: {str(selector_error)}")
                     results_by_isbn[isbn] = {
                         "status": "no_data_found",
                         "message": f"No results found on Edelweiss for ISBN {isbn}",
@@ -98,7 +136,7 @@ async def scrape_isbns(isbns: List[str]):
                         try:
                             if await bisac_button.is_enabled():
                                 await bisac_button.click()
-                                popover = await page.wait_for_selector('div.MuiPopover-paper', timeout=3000)
+                                popover = await page.wait_for_selector('div.MuiPopover-paper', timeout=5000)
                                 bisac_categories = await popover.evaluate("""
                                     pop => Array.from(pop.querySelectorAll('li'))
                                             .slice(1)
@@ -126,6 +164,7 @@ async def scrape_isbns(isbns: List[str]):
                         "community": community
                     })
 
+                logger.info(f"Successfully processed ISBN {isbn}: found {len(books_data)} book(s)")
                 results_by_isbn[isbn] = {
                     "status": "data_found",
                     "message": f"Found {len(books_data)} book(s) for ISBN {isbn}",
@@ -133,6 +172,7 @@ async def scrape_isbns(isbns: List[str]):
                 }
 
             except Exception as e:
+                logger.error(f"Error processing ISBN {isbn}: {str(e)}")
                 results_by_isbn[isbn] = {
                     "status": "error",
                     "message": str(e),
