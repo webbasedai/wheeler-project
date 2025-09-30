@@ -14,9 +14,8 @@ services:
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
     volumes:
       - n8n_data:/home/node/.n8n
-      - /etc/letsencrypt/live/automation.jypi.org:/etc/n8n-certs:ro
-      - /etc/letsencrypt/archive/automation.jypi.org:/etc/letsencrypt/archive/automation.jypi.org:ro
-
+      - /etc/letsencrypt/archive/automation.jypi.org/privkey1.pem:/etc/n8n-certs/privkey.pem:ro
+      - /etc/letsencrypt/archive/automation.jypi.org/fullchain1.pem:/etc/n8n-certs/fullchain.pem:ro
     restart: unless-stopped
     depends_on:
       - scraper
