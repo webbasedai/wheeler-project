@@ -7,8 +7,8 @@ services:
       - N8N_HOST=automation.jypi.org
       - N8N_PORT=5678
       - N8N_PROTOCOL=https
-      - N8N_SSL_KEY=/etc/letsencrypt/live/automation.jypi.org/privkey1.pem
-      - N8N_SSL_CERT=/etc/letsencrypt/live/automation.jypi.org/fullchain1.pem
+      - N8N_SSL_KEY=/etc/letsencrypt/live/automation.jypi.org/privkey.pem
+      - N8N_SSL_CERT=/etc/letsencrypt/live/automation.jypi.org/fullchain.pem
       - N8N_SECURE_COOKIE=true
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
     volumes:
