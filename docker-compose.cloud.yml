@@ -14,7 +14,7 @@ services:
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
     volumes:
       - n8n_data:/home/node/.n8n
-      - /etc/letsencrypt/n8n-certs:/etc/n8n-certs:ro
+      - /etc/letsencrypt/live/automation.jypi.org:/etc/n8n-certs:ro
 
     restart: unless-stopped
     depends_on:
