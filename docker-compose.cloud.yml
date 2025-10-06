@@ -9,16 +9,38 @@ services:
       - N8N_PROTOCOL=https
       - N8N_SSL_KEY=/etc/n8n-certs/privkey.pem
       - N8N_SSL_CERT=/etc/n8n-certs/fullchain.pem
-
       - N8N_SECURE_COOKIE=true
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      # PostgreSQL configuration
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=n8n
+      - DB_POSTGRESDB_PASSWORD=n8n_password
+      # Fix deprecation warnings
+      - DB_SQLITE_POOL_SIZE=10
+      - N8N_RUNNERS_ENABLED=true
+      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+      - N8N_GIT_NODE_DISABLE_BARE_REPOS=true
     volumes:
       - n8n_data:/home/node/.n8n
       - /etc/letsencrypt/archive/automation.jypi.org/privkey1.pem:/etc/n8n-certs/privkey.pem:ro
       - /etc/letsencrypt/archive/automation.jypi.org/fullchain1.pem:/etc/n8n-certs/fullchain.pem:ro
     restart: unless-stopped
     depends_on:
+      - postgres
       - scraper
+
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=n8n
+      - POSTGRES_USER=n8n
+      - POSTGRES_PASSWORD=n8n_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
   scraper:
     build:
@@ -34,3 +56,4 @@ services:
 
 volumes:
   n8n_data:
+  postgres_data:
