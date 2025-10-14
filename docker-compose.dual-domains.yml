@@ -26,6 +26,7 @@ services:
       - N8N_PROTOCOL=http
       - N8N_SECURE_COOKIE=false
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_TRUST_PROXY=true
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_HOST=agents_postgres
       - DB_POSTGRESDB_PORT=5432
@@ -78,6 +79,7 @@ services:
       - N8N_PROTOCOL=http
       - N8N_SECURE_COOKIE=false
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_TRUST_PROXY=true
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_HOST=automation_postgres
       - DB_POSTGRESDB_PORT=5432
