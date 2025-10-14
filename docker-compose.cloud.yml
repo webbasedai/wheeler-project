@@ -2,14 +2,17 @@ services:
   n8n:
     image: n8nio/n8n:latest
     user: root
-    expose:
-      - "5678"  # Internal port only
+    ports:
+      - "443:443"  # Map HTTPS to n8n internal port
     environment:
-      - N8N_HOST=automation.jypi.org
-      - N8N_PORT=5678
-      - N8N_PROTOCOL=http
-      - N8N_SECURE_COOKIE=false
+      - N8N_HOST=agents.webbased.ai
+      - N8N_PORT=443
+      - N8N_PROTOCOL=https
+      - N8N_SSL_KEY=/etc/n8n-certs/privkey.pem
+      - N8N_SSL_CERT=/etc/n8n-certs/fullchain.pem
+      - N8N_SECURE_COOKIE=true
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_TRUST_PROXY=true
       # PostgreSQL configuration
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_HOST=postgres
@@ -24,6 +27,8 @@ services:
       - N8N_GIT_NODE_DISABLE_BARE_REPOS=true
     volumes:
       - n8n_data:/home/node/.n8n
+      - /etc/letsencrypt/archive/agents.webbased.ai/privkey1.pem:/etc/n8n-certs/privkey.pem:ro
+      - /etc/letsencrypt/archive/agents.webbased.ai/fullchain1.pem:/etc/n8n-certs/fullchain.pem:ro
     restart: unless-stopped
     depends_on:
       - postgres
@@ -45,8 +50,8 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./scraper:/app
-    expose:
-      - "8000"  # Internal port only
+    ports:
+      - "8000:8000"
     environment:
       - PYTHONUNBUFFERED=1
     restart: unless-stopped
