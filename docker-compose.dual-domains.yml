@@ -1,0 +1,125 @@
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    restart: unless-stopped
+    depends_on:
+      - agents_n8n
+      - agents_scraper
+      - automation_n8n
+      - automation_scraper
+
+  # Agents domain services
+  agents_n8n:
+    image: n8nio/n8n:latest
+    user: root
+    expose:
+      - "5678"
+    environment:
+      - N8N_HOST=agents.webbased.ai
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - N8N_SECURE_COOKIE=false
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=agents_postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=n8n
+      - DB_POSTGRESDB_PASSWORD=n8n_password
+      - DB_SQLITE_POOL_SIZE=10
+      - N8N_RUNNERS_ENABLED=true
+      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+      - N8N_GIT_NODE_DISABLE_BARE_REPOS=true
+    volumes:
+      - n8n_agents_data:/home/node/.n8n
+    restart: unless-stopped
+    depends_on:
+      - agents_postgres
+      - agents_scraper
+
+  agents_postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=n8n
+      - POSTGRES_USER=n8n
+      - POSTGRES_PASSWORD=n8n_password
+    volumes:
+      - postgres_agents_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  agents_scraper:
+    build:
+      context: ./scraper
+      dockerfile: Dockerfile
+    volumes:
+      - ./scraper:/app
+    expose:
+      - "8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DOMAIN_NAME=agents.webbased.ai
+    restart: unless-stopped
+
+  # Automation domain services
+  automation_n8n:
+    image: n8nio/n8n:latest
+    user: root
+    expose:
+      - "5678"
+    environment:
+      - N8N_HOST=automation.jypi.org
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - N8N_SECURE_COOKIE=false
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=automation_postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=n8n
+      - DB_POSTGRESDB_PASSWORD=n8n_password
+      - DB_SQLITE_POOL_SIZE=10
+      - N8N_RUNNERS_ENABLED=true
+      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+      - N8N_GIT_NODE_DISABLE_BARE_REPOS=true
+    volumes:
+      - n8n_automation_data:/home/node/.n8n
+    restart: unless-stopped
+    depends_on:
+      - automation_postgres
+      - automation_scraper
+
+  automation_postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=n8n
+      - POSTGRES_USER=n8n
+      - POSTGRES_PASSWORD=n8n_password
+    volumes:
+      - postgres_automation_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  automation_scraper:
+    build:
+      context: ./scraper
+      dockerfile: Dockerfile
+    volumes:
+      - ./scraper:/app
+    expose:
+      - "8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DOMAIN_NAME=automation.jypi.org
+    restart: unless-stopped
+
+volumes:
+  n8n_agents_data:
+  postgres_agents_data:
+  n8n_automation_data:
+  postgres_automation_data:
