@@ -2,7 +2,7 @@ services:
   n8n:
     image: n8nio/n8n:latest
     ports:
-      - "443:443"  # Map HTTPS to n8n internal port
+      - "8443:443"  # Map HTTPS to n8n internal port (using 8443 to avoid conflicts)
     environment:
       - N8N_HOST=agents.webbased.ai
       - N8N_PORT=443
@@ -49,7 +49,7 @@ services:
     volumes:
       - ./scraper:/app
     ports:
-      - "8000:8000"
+      - "8001:8000"  # Using 8001 to avoid conflicts with existing services
     environment:
       - PYTHONUNBUFFERED=1
       - DOMAIN_NAME=agents.webbased.ai
