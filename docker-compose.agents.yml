@@ -1,6 +1,7 @@
 services:
   n8n:
     image: n8nio/n8n:latest
+    user: root
     ports:
       - "443:443"  # Map HTTPS to n8n internal port
     environment:
